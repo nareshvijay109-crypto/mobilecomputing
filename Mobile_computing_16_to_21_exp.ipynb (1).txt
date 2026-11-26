@@ -1,0 +1,461 @@
+{
+  "cells": [
+    {
+      "cell_type": "markdown",
+      "metadata": {
+        "id": "view-in-github",
+        "colab_type": "text"
+      },
+      "source": [
+        "<a href=\"https://colab.research.google.com/github/Midhula13/ITA0319-mobile-computing/blob/main/Mobile_computing_16_to_21_exp.ipynb\" target=\"_parent\"><img src=\"https://colab.research.google.com/assets/colab-badge.svg\" alt=\"Open In Colab\"/></a>"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "33167472",
+      "metadata": {
+        "id": "33167472"
+      },
+      "source": [
+        "## 1. Free-Space Path Loss and Received Power"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 1,
+      "id": "066bbb69",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "066bbb69",
+        "outputId": "efded3b2-ac05-44e4-f0f7-0cb1da3ae4a2"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Frequency: 200 MHz\n",
+            "Distance: 2 km\n",
+            "Transmitted Power: 30 dBm\n",
+            "Free-Space Path Loss: 84.48 dB\n",
+            "Received Power: -54.48 dBm\n"
+          ]
+        }
+      ],
+      "source": [
+        "# INPUT VALUES — change these values as needed\n",
+        "frequency_mhz = 200\n",
+        "distance_km = 2\n",
+        "transmit_power_dbm = 30\n",
+        "\n",
+        "import math\n",
+        "\n",
+        "if frequency_mhz <= 0 or distance_km <= 0:\n",
+        "    print(\"Frequency and distance must be greater than zero.\")\n",
+        "else:\n",
+        "    fspl = 32.44 + 20 * math.log10(frequency_mhz) + 20 * math.log10(distance_km)\n",
+        "    received_power = transmit_power_dbm - fspl\n",
+        "\n",
+        "    print(\"Frequency:\", frequency_mhz, \"MHz\")\n",
+        "    print(\"Distance:\", distance_km, \"km\")\n",
+        "    print(\"Transmitted Power:\", transmit_power_dbm, \"dBm\")\n",
+        "    print(\"Free-Space Path Loss:\", round(fspl, 2), \"dB\")\n",
+        "    print(\"Received Power:\", round(received_power, 2), \"dBm\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "d5047dda",
+      "metadata": {
+        "id": "d5047dda"
+      },
+      "source": [
+        "## 2. Frequency (Co-channel) Reuse: Cluster Size, Capacity and S/I"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 2,
+      "id": "7f2fbad7",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "7f2fbad7",
+        "outputId": "2152059e-8e95-40d2-edfd-11369cda8f3d"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Reuse Parameters: i = 2 , j = 1\n",
+            "Total Channels: 120\n",
+            "Cluster Size: 7\n",
+            "Average Channels per Cell: 17.14\n",
+            "Reuse Ratio (D/R): 4.58\n",
+            "S/I Ratio: 73.5\n",
+            "S/I in dB: 18.66\n"
+          ]
+        }
+      ],
+      "source": [
+        "# INPUT VALUES — change these values as needed\n",
+        "i = 2\n",
+        "j = 1\n",
+        "total_channels = 120\n",
+        "\n",
+        "import math\n",
+        "\n",
+        "cluster_size = i**2 + i*j + j**2\n",
+        "\n",
+        "if i < 0 or j < 0 or cluster_size == 0 or total_channels <= 0:\n",
+        "    print(\"Enter valid reuse parameters and a positive channel count.\")\n",
+        "else:\n",
+        "    channels_per_cell = total_channels / cluster_size\n",
+        "    reuse_ratio = math.sqrt(3 * cluster_size)\n",
+        "\n",
+        "    # Assumptions: 6 first-tier interferers and path-loss exponent n = 4.\n",
+        "    si_linear = (reuse_ratio ** 4) / 6\n",
+        "    si_db = 10 * math.log10(si_linear)\n",
+        "\n",
+        "    print(\"Reuse Parameters: i =\", i, \", j =\", j)\n",
+        "    print(\"Total Channels:\", total_channels)\n",
+        "    print(\"Cluster Size:\", cluster_size)\n",
+        "    print(\"Average Channels per Cell:\", round(channels_per_cell, 2))\n",
+        "    print(\"Reuse Ratio (D/R):\", round(reuse_ratio, 2))\n",
+        "    print(\"S/I Ratio:\", round(si_linear, 2))\n",
+        "    print(\"S/I in dB:\", round(si_db, 2))"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "0c459a66",
+      "metadata": {
+        "id": "0c459a66"
+      },
+      "source": [
+        "## 3. Call Blocking Probability Using the Erlang B Formula"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 3,
+      "id": "7bdb8932",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "7bdb8932",
+        "outputId": "ca912fcd-a8ef-4df0-9bc2-558fc6f9fc8d"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Number of Channels: 10\n",
+            "Offered Traffic: 5.0 Erlangs\n",
+            "Call Blocking Probability: 0.0184\n",
+            "Blocking Percentage: 1.84 %\n"
+          ]
+        }
+      ],
+      "source": [
+        "# INPUT VALUES — change these values as needed\n",
+        "number_of_channels = 10\n",
+        "offered_traffic = 5.0  # Erlangs\n",
+        "\n",
+        "if number_of_channels <= 0 or offered_traffic < 0:\n",
+        "    print(\"Enter a positive number of channels and non-negative traffic.\")\n",
+        "else:\n",
+        "    blocking_probability = 1.0\n",
+        "\n",
+        "    # Recursive Erlang B formula\n",
+        "    for n in range(1, number_of_channels + 1):\n",
+        "        blocking_probability = (offered_traffic * blocking_probability) / (\n",
+        "            n + offered_traffic * blocking_probability\n",
+        "        )\n",
+        "\n",
+        "    print(\"Number of Channels:\", number_of_channels)\n",
+        "    print(\"Offered Traffic:\", offered_traffic, \"Erlangs\")\n",
+        "    print(\"Call Blocking Probability:\", round(blocking_probability, 4))\n",
+        "    print(\"Blocking Percentage:\", round(blocking_probability * 100, 2), \"%\")"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "761a6c4c",
+      "metadata": {
+        "id": "761a6c4c"
+      },
+      "source": [
+        "## 4. Handoff Simulation with Hysteresis"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 4,
+      "id": "a83d24ab",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "a83d24ab",
+        "outputId": "c3a42062-1bb5-4d15-b42b-82314f6ba4cc"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Hysteresis: 3 dB\n",
+            "\n",
+            "Step 1\n",
+            "Cell A Signal: -80 dBm\n",
+            "Cell B Signal: -86 dBm\n",
+            "Connected to Cell: A\n",
+            "\n",
+            "Step 2\n",
+            "Cell A Signal: -78 dBm\n",
+            "Cell B Signal: -82 dBm\n",
+            "Connected to Cell: A\n",
+            "\n",
+            "Step 3\n",
+            "Cell A Signal: -76 dBm\n",
+            "Cell B Signal: -79 dBm\n",
+            "Connected to Cell: A\n",
+            "\n",
+            "Step 4\n",
+            "Cell A Signal: -75 dBm\n",
+            "Cell B Signal: -73 dBm\n",
+            "Connected to Cell: A\n",
+            "\n",
+            "Step 5\n",
+            "Cell A Signal: -77 dBm\n",
+            "Cell B Signal: -72 dBm\n",
+            "Handoff: Cell A to Cell B\n",
+            "Connected to Cell: B\n",
+            "\n",
+            "Step 6\n",
+            "Cell A Signal: -81 dBm\n",
+            "Cell B Signal: -75 dBm\n",
+            "Connected to Cell: B\n",
+            "\n",
+            "Step 7\n",
+            "Cell A Signal: -84 dBm\n",
+            "Cell B Signal: -78 dBm\n",
+            "Connected to Cell: B\n"
+          ]
+        }
+      ],
+      "source": [
+        "# INPUT VALUES — signal strengths in dBm\n",
+        "signal_cell_a = [-80, -78, -76, -75, -77, -81, -84]\n",
+        "signal_cell_b = [-86, -82, -79, -73, -72, -75, -78]\n",
+        "hysteresis_db = 3\n",
+        "\n",
+        "serving_cell = \"A\"\n",
+        "\n",
+        "print(\"Hysteresis:\", hysteresis_db, \"dB\")\n",
+        "\n",
+        "for step in range(len(signal_cell_a)):\n",
+        "    a = signal_cell_a[step]\n",
+        "    b = signal_cell_b[step]\n",
+        "\n",
+        "    print(\"\\nStep\", step + 1)\n",
+        "    print(\"Cell A Signal:\", a, \"dBm\")\n",
+        "    print(\"Cell B Signal:\", b, \"dBm\")\n",
+        "\n",
+        "    if serving_cell == \"A\" and b > a + hysteresis_db:\n",
+        "        serving_cell = \"B\"\n",
+        "        print(\"Handoff: Cell A to Cell B\")\n",
+        "    elif serving_cell == \"B\" and a > b + hysteresis_db:\n",
+        "        serving_cell = \"A\"\n",
+        "        print(\"Handoff: Cell B to Cell A\")\n",
+        "\n",
+        "    print(\"Connected to Cell:\", serving_cell)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "8b26a9b5",
+      "metadata": {
+        "id": "8b26a9b5"
+      },
+      "source": [
+        "## 5. Code Division Multiple Access (CDMA): Spreading and Despreading"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 5,
+      "id": "c4952652",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "c4952652",
+        "outputId": "31b91190-63df-485c-9e31-ada9a789abc4"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "Original Data: [1, 0, 1, 1]\n",
+            "Spreading Code: [1, -1, 1, -1]\n",
+            "Spread Signal: [1, -1, 1, -1, -1, 1, -1, 1, 1, -1, 1, -1, 1, -1, 1, -1]\n",
+            "Despread Data: [1, 0, 1, 1]\n"
+          ]
+        }
+      ],
+      "source": [
+        "# INPUT VALUES — binary data and spreading code\n",
+        "data_bits = [1, 0, 1, 1]\n",
+        "spreading_code = [1, -1, 1, -1]\n",
+        "\n",
+        "# Convert each bit to +1 or -1 and multiply by the spreading code.\n",
+        "spread_signal = []\n",
+        "\n",
+        "for bit in data_bits:\n",
+        "    symbol = 1 if bit == 1 else -1\n",
+        "    for chip in spreading_code:\n",
+        "        spread_signal.append(symbol * chip)\n",
+        "\n",
+        "# Despread by correlating each group with the original code.\n",
+        "despread_bits = []\n",
+        "code_length = len(spreading_code)\n",
+        "\n",
+        "for start in range(0, len(spread_signal), code_length):\n",
+        "    received_chips = spread_signal[start:start + code_length]\n",
+        "    correlation = 0\n",
+        "\n",
+        "    for k in range(code_length):\n",
+        "        correlation += received_chips[k] * spreading_code[k]\n",
+        "\n",
+        "    despread_bits.append(1 if correlation > 0 else 0)\n",
+        "\n",
+        "print(\"Original Data:\", data_bits)\n",
+        "print(\"Spreading Code:\", spreading_code)\n",
+        "print(\"Spread Signal:\", spread_signal)\n",
+        "print(\"Despread Data:\", despread_bits)"
+      ]
+    },
+    {
+      "cell_type": "markdown",
+      "id": "0ed2b62c",
+      "metadata": {
+        "id": "0ed2b62c"
+      },
+      "source": [
+        "## 6. Effect of OFDMA Downlink Scheduler on User Throughput and Fairness"
+      ]
+    },
+    {
+      "cell_type": "code",
+      "execution_count": 6,
+      "id": "e415df87",
+      "metadata": {
+        "colab": {
+          "base_uri": "https://localhost:8080/"
+        },
+        "id": "e415df87",
+        "outputId": "be672de8-20e9-408f-aff9-dbb10028b1f2"
+      },
+      "outputs": [
+        {
+          "output_type": "stream",
+          "name": "stdout",
+          "text": [
+            "ROUND ROBIN SCHEDULER\n",
+            "User 1 Throughput: 15.0 Mbps\n",
+            "User 2 Throughput: 18.0 Mbps\n",
+            "User 3 Throughput: 10.0 Mbps\n",
+            "Total Throughput: 43.0 Mbps\n",
+            "Jain Fairness Index: 0.95\n",
+            "\n",
+            "PROPORTIONAL FAIR SCHEDULER\n",
+            "User 1 Throughput: 8.0 Mbps\n",
+            "User 2 Throughput: 33.0 Mbps\n",
+            "User 3 Throughput: 10.0 Mbps\n",
+            "Total Throughput: 51.0 Mbps\n",
+            "Jain Fairness Index: 0.692\n"
+          ]
+        }
+      ],
+      "source": [
+        "# INPUT VALUES — achievable rate (Mbps) for each user on each resource block\n",
+        "# Rows represent users; columns represent OFDMA resource blocks.\n",
+        "user_rates = [\n",
+        "    [8, 7, 6, 5, 4, 3, 2, 1],  # User 1\n",
+        "    [2, 3, 4, 5, 6, 7, 8, 9],  # User 2\n",
+        "    [5, 5, 5, 5, 5, 5, 5, 5]   # User 3\n",
+        "]\n",
+        "\n",
+        "num_users = len(user_rates)\n",
+        "num_blocks = len(user_rates[0])\n",
+        "\n",
+        "# Round Robin: allocate resource blocks to users in turn.\n",
+        "rr_throughput = [0.0] * num_users\n",
+        "\n",
+        "for block in range(num_blocks):\n",
+        "    selected_user = block % num_users\n",
+        "    rr_throughput[selected_user] += user_rates[selected_user][block]\n",
+        "\n",
+        "# Proportional Fair: select the user with the largest rate / past average rate.\n",
+        "pf_throughput = [0.0] * num_users\n",
+        "average_rate = [1.0] * num_users\n",
+        "\n",
+        "for block in range(num_blocks):\n",
+        "    scores = []\n",
+        "    for user in range(num_users):\n",
+        "        scores.append(user_rates[user][block] / average_rate[user])\n",
+        "\n",
+        "    selected_user = scores.index(max(scores))\n",
+        "    selected_rate = user_rates[selected_user][block]\n",
+        "    pf_throughput[selected_user] += selected_rate\n",
+        "    average_rate[selected_user] = (\n",
+        "        0.5 * average_rate[selected_user] + 0.5 * selected_rate\n",
+        "    )\n",
+        "\n",
+        "def jain_fairness(values):\n",
+        "    total = sum(values)\n",
+        "    sum_squares = sum(value ** 2 for value in values)\n",
+        "    if sum_squares == 0:\n",
+        "        return 0\n",
+        "    return (total ** 2) / (len(values) * sum_squares)\n",
+        "\n",
+        "print(\"ROUND ROBIN SCHEDULER\")\n",
+        "for user in range(num_users):\n",
+        "    print(\"User\", user + 1, \"Throughput:\", round(rr_throughput[user], 2), \"Mbps\")\n",
+        "print(\"Total Throughput:\", round(sum(rr_throughput), 2), \"Mbps\")\n",
+        "print(\"Jain Fairness Index:\", round(jain_fairness(rr_throughput), 3))\n",
+        "\n",
+        "print(\"\\nPROPORTIONAL FAIR SCHEDULER\")\n",
+        "for user in range(num_users):\n",
+        "    print(\"User\", user + 1, \"Throughput:\", round(pf_throughput[user], 2), \"Mbps\")\n",
+        "print(\"Total Throughput:\", round(sum(pf_throughput), 2), \"Mbps\")\n",
+        "print(\"Jain Fairness Index:\", round(jain_fairness(pf_throughput), 3))"
+      ]
+    }
+  ],
+  "metadata": {
+    "colab": {
+      "provenance": [],
+      "include_colab_link": true
+    },
+    "kernelspec": {
+      "display_name": "Python 3",
+      "language": "python",
+      "name": "python3"
+    },
+    "language_info": {
+      "name": "python"
+    }
+  },
+  "nbformat": 4,
+  "nbformat_minor": 5
+}
